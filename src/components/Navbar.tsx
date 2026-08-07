@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Music2, Trophy, User, LogOut, Sparkles, ChevronRight } from 'lucide-react';
+import { Music2, Trophy, User, LogOut, Sparkles, ChevronRight, HelpCircle } from 'lucide-react';
 
 interface NavbarProps {
   user: any;
   onOpenAuth: () => void;
   onOpenLeaderboard: () => void;
+  onOpenHelp: () => void;
   onNewGame: () => void;
   onLogout: () => void;
 }
@@ -15,6 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   user,
   onOpenAuth,
   onOpenLeaderboard,
+  onOpenHelp,
   onNewGame,
   onLogout,
 }) => {
@@ -43,8 +45,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Acciones con Button-in-Button pattern */}
+        {/* Acciones */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenHelp}
+            className="p-2 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold text-slate-300 glass-pill hover:text-slate-100 transition-all flex items-center gap-1.5"
+            title="Instrucciones del juego"
+          >
+            <HelpCircle className="w-4 h-4 text-emerald-400" />
+            <span className="hidden md:inline">Reglas</span>
+          </button>
+
           <button
             onClick={onNewGame}
             className="hidden sm:flex items-center gap-2 pl-3.5 pr-1.5 py-1.5 rounded-full text-xs font-semibold text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 active:scale-95 transition-all group"

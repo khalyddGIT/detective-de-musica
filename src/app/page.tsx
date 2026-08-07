@@ -6,15 +6,17 @@ import { GameBoard } from '@/components/GameBoard';
 import { ResultModal } from '@/components/ResultModal';
 import { Leaderboard } from '@/components/Leaderboard';
 import { AuthModal } from '@/components/AuthModal';
+import { HelpModal } from '@/components/HelpModal';
 import { Pista } from '@/types/game';
 import { createClient } from '@/lib/supabase/client';
-import { Sparkles, Play, Music2 } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [cancionId, setCancionId] = useState<string>('');
   const [pistas, setPistas] = useState<Pista[]>([]);
   const [totalPistas, setTotalPistas] = useState<number>(5);
+  const [wrongGuesses, setWrongGuesses] = useState<string[]>([]);
   
   const [isLoadingGame, setIsLoadingGame] = useState<boolean>(true);
   const [isLoadingPista, setIsLoadingPista] = useState<boolean>(false);
@@ -34,6 +36,7 @@ export default function Home() {
 
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
   const [showAuth, setShowAuth] = useState<boolean>(false);
+  const [showHelp, setShowHelp] = useState<boolean>(false);
 
   const supabase = createClient();
 
@@ -57,6 +60,7 @@ export default function Home() {
     setIsLoadingGame(true);
     setGameResult(null);
     setPistas([]);
+    setWrongGuesses([]);
 
     try {
       const res = await fetch('/api/game/random');
@@ -124,13 +128,18 @@ export default function Home() {
 
       const data = await res.json();
 
-      if (data.cancion) {
-        setGameResult({
-          finished: true,
-          acerto: data.acerto,
-          puntaje: data.puntaje,
-          cancion: data.cancion,
-        });
+      if (data.acerto || guess === '___RENDICION___') {
+        if (data.cancion) {
+          setGameResult({
+            finished: true,
+            acerto: data.acerto,
+            puntaje: data.puntaje,
+            cancion: data.cancion,
+          });
+        }
+      } else {
+        // Respuesta errónea: agregar al historial de intentos fallidos
+        setWrongGuesses((prev) => [...prev, guess]);
       }
     } catch (error) {
       console.error('Error al evaluar la respuesta:', error);
@@ -158,6 +167,7 @@ export default function Home() {
         user={user}
         onOpenAuth={() => setShowAuth(true)}
         onOpenLeaderboard={() => setShowLeaderboard(true)}
+        onOpenHelp={() => setShowHelp(true)}
         onNewGame={startNewGame}
         onLogout={handleLogout}
       />
@@ -198,6 +208,7 @@ export default function Home() {
             onRendirse={handleRendirse}
             isLoadingPista={isLoadingPista}
             isSubmittingGuess={isSubmittingGuess}
+            wrongGuesses={wrongGuesses}
           />
         )}
       </main>
@@ -228,6 +239,10 @@ export default function Home() {
 
       {showAuth && (
         <AuthModal onClose={() => setShowAuth(false)} />
+      )}
+
+      {showHelp && (
+        <HelpModal onClose={() => setShowHelp(false)} />
       )}
     </div>
   );
