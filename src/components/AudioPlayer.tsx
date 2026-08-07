@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Play, Pause, Volume2, Music } from 'lucide-react';
+import { Play, Pause, Volume2, Music, AlertCircle } from 'lucide-react';
 
 interface AudioPlayerProps {
   url: string;
@@ -9,16 +9,22 @@ interface AudioPlayerProps {
 
 export const AudioPlayer: React.FC<AudioPlayerProps> = ({ url }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioError, setAudioError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || audioError) return;
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().catch(console.error);
-      setIsPlaying(true);
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch((err) => {
+        console.warn('Audio play prevented or failed:', err);
+        setIsPlaying(false);
+        setAudioError(true);
+      });
     }
   };
 
@@ -26,11 +32,16 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ url }) => {
     setIsPlaying(false);
   };
 
-  if (!url || url.includes('no disponible')) {
+  const handleError = () => {
+    setIsPlaying(false);
+    setAudioError(true);
+  };
+
+  if (!url || url.includes('no disponible') || audioError) {
     return (
-      <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 text-center text-xs text-slate-400 font-medium">
-        <Music className="w-5 h-5 mx-auto mb-1.5 text-slate-600" />
-        Muestra de audio no disponible para esta canción.
+      <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-center text-xs text-slate-400 font-medium flex items-center justify-center gap-2">
+        <AlertCircle className="w-4 h-4 text-amber-400" />
+        <span>Muestra de audio no disponible en este dispositivo. ¡Intenta adivinar con las demás pistas!</span>
       </div>
     );
   }
@@ -41,6 +52,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ url }) => {
         ref={audioRef}
         src={url}
         onEnded={handleEnded}
+        onError={handleError}
         preload="metadata"
       />
       <div className="flex items-center gap-4">

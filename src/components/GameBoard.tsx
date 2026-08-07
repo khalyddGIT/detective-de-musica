@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Pista } from '@/types/game';
+import { Pista, StreakInfo } from '@/types/game';
 import { AudioPlayer } from './AudioPlayer';
-import { Calendar, Tag, Disc, FileText, Music, Lock, Send, PlusCircle, HelpCircle, Flame, AlertCircle, Sparkles } from 'lucide-react';
+import { Calendar, Tag, Disc, FileText, Music, Lock, Send, PlusCircle, HelpCircle, Flame, AlertCircle, Sparkles, HelpCircle as HelpIcon, CheckCircle2 } from 'lucide-react';
 
 interface GameBoardProps {
   cancionId: string;
@@ -15,9 +15,11 @@ interface GameBoardProps {
   isLoadingPista: boolean;
   isSubmittingGuess: boolean;
   wrongGuesses?: string[];
+  streakInfo: StreakInfo;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
+  cancionId,
   pistas,
   totalPistas,
   onPedirPista,
@@ -26,19 +28,26 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   isLoadingPista,
   isSubmittingGuess,
   wrongGuesses = [],
+  streakInfo,
 }) => {
   const [guessInput, setGuessInput] = useState('');
   const [shakeInput, setShakeInput] = useState(false);
 
+  // Estado del Comodín de 4 Opciones
+  const [wildcardOptions, setWildcardOptions] = useState<string[]>([]);
+  const [isLoadingWildcard, setIsLoadingWildcard] = useState<boolean>(false);
+  const [usedWildcard, setUsedWildcard] = useState<boolean>(false);
+
   const pistasUsadas = pistas.length;
-  const puntajeMaximoActual = Math.max(20, 120 - pistasUsadas * 20);
+  // Si usó el comodín de opciones, restar 30 pts adicionales
+  const penaltyWildcard = usedWildcard ? 30 : 0;
+  const puntajeMaximoActual = Math.max(10, 120 - pistasUsadas * 20 - penaltyWildcard);
   const progressPercent = (puntajeMaximoActual / 100) * 100;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!guessInput.trim()) return;
 
-    // Si la respuesta ya fue intentada previamente
     if (wrongGuesses.includes(guessInput.trim().toLowerCase())) {
       setShakeInput(true);
       setTimeout(() => setShakeInput(false), 500);
@@ -47,6 +56,28 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
     onEnviarRespuesta(guessInput.trim());
     setGuessInput('');
+  };
+
+  const handleActivarComodin = async () => {
+    if (usedWildcard || isLoadingWildcard) return;
+
+    setIsLoadingWildcard(true);
+    try {
+      const res = await fetch('/api/game/options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancion_id: cancionId }),
+      });
+      const data = await res.json();
+      if (data.opciones && Array.isArray(data.opciones)) {
+        setWildcardOptions(data.opciones);
+        setUsedWildcard(true);
+      }
+    } catch (err) {
+      console.error('Error al pedir opciones:', err);
+    } finally {
+      setIsLoadingWildcard(false);
+    }
   };
 
   const getPistaIcon = (tipo: string) => {
@@ -68,15 +99,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-6 pb-12">
-      {/* Dynamic Score Indicator Panel with Progress Bar */}
+      {/* Dynamic Score Panel & Streak Header */}
       <div className="bezel-outer">
         <div className="bezel-inner p-5 sm:p-6 space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center sm:text-left">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-[10px] uppercase tracking-[0.2em] font-bold">
-                <Flame className="w-3.5 h-3.5 fill-amber-400/30" />
-                <span>DESBLOQUEO PROGRESIVO</span>
+              <div className="flex items-center gap-2 justify-center sm:justify-start">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-[10px] uppercase tracking-[0.2em] font-bold">
+                  <Flame className="w-3.5 h-3.5 fill-amber-400/30" />
+                  <span>DESBLOQUEO PROGRESIVO</span>
+                </div>
+
+                {streakInfo.rachaActual > 0 && (
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 font-mono text-[10px] font-bold animate-pulse">
+                    <span>🔥 Racha: {streakInfo.rachaActual}</span>
+                  </div>
+                )}
               </div>
+
               <h2 className="font-extrabold text-base sm:text-lg text-slate-100 tracking-tight">
                 Pistas Reveladas: {pistasUsadas} de {totalPistas}
               </h2>
@@ -174,6 +214,33 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         })}
       </div>
 
+      {/* Comodín de 4 Opciones Múltiples */}
+      {wildcardOptions.length > 0 && (
+        <div className="bezel-outer animate-in fade-in zoom-in-95 duration-300">
+          <div className="bezel-inner p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span className="text-xs font-bold text-purple-300">
+                Comodín Activado: Selecciona una de las 4 opciones (-30 pts)
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {wildcardOptions.map((option, i) => (
+                <button
+                  key={i}
+                  onClick={() => onEnviarRespuesta(option)}
+                  disabled={isSubmittingGuess}
+                  className="p-3.5 rounded-xl bg-slate-950 border border-purple-500/30 hover:border-purple-400 hover:bg-purple-500/10 text-slate-100 font-bold text-xs text-left transition-all active:scale-95 flex items-center justify-between group"
+                >
+                  <span>{option}</span>
+                  <CheckCircle2 className="w-4 h-4 text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Wrong Guesses History Chips */}
       {wrongGuesses.length > 0 && (
         <div className="p-4 rounded-2xl bg-rose-500/5 border border-rose-500/15 space-y-2">
@@ -185,7 +252,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             {wrongGuesses.map((guess, idx) => (
               <span
                 key={idx}
-                className="text-xs font-mono px-3 py-1 rounded-full bg-slate-900 border border-rose-500/30 text-slate-300 line-through decoration-rose-500/60"
+                className="text-xs font-mono px-3 py-1 rounded-full bg-slate-950 border border-rose-500/30 text-slate-300 line-through decoration-rose-500/60"
               >
                 {guess}
               </span>
@@ -223,16 +290,29 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           </form>
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
-            <button
-              onClick={onPedirPista}
-              disabled={pistasUsadas >= totalPistas || isLoadingPista}
-              className="flex items-center gap-2 pl-4 pr-2 py-2 rounded-full text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 disabled:opacity-40 transition-all active:scale-95 group"
-            >
-              <span>{isLoadingPista ? 'Desbloqueando...' : 'Pedir más pistas (-20 pts)'}</span>
-              <div className="w-6 h-6 rounded-full bg-amber-400/20 flex items-center justify-center text-amber-300 group-hover:scale-110 transition-transform">
-                <PlusCircle className="w-3.5 h-3.5 stroke-[2.5]" />
-              </div>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={onPedirPista}
+                disabled={pistasUsadas >= totalPistas || isLoadingPista}
+                className="flex items-center gap-2 pl-4 pr-2 py-2 rounded-full text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 disabled:opacity-40 transition-all active:scale-95 group"
+              >
+                <span>{isLoadingPista ? 'Desbloqueando...' : 'Pedir más pistas (-20 pts)'}</span>
+                <div className="w-6 h-6 rounded-full bg-amber-400/20 flex items-center justify-center text-amber-300 group-hover:scale-110 transition-transform">
+                  <PlusCircle className="w-3.5 h-3.5 stroke-[2.5]" />
+                </div>
+              </button>
+
+              {!usedWildcard && (
+                <button
+                  onClick={handleActivarComodin}
+                  disabled={isLoadingWildcard}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-bold text-purple-300 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 disabled:opacity-40 transition-all active:scale-95"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  <span>{isLoadingWildcard ? 'Cargando...' : 'Comodín 4 Opciones (-30 pts)'}</span>
+                </button>
+              )}
+            </div>
 
             <button
               onClick={onRendirse}

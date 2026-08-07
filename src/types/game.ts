@@ -1,5 +1,7 @@
 export type TipoPista = 'anio' | 'genero' | 'colaboradores' | 'letra' | 'audio';
 
+export type ModoJuego = 'aleatorio' | 'diario' | 'clasicos' | 'modernos';
+
 export interface Pista {
   orden: number;
   tipo: TipoPista;
@@ -38,7 +40,8 @@ export interface Partida {
   usuarios?: Usuario;
 }
 
-export interface SongInput {
-  artist: string;
-  track: string;
+export interface StreakInfo {
+  rachaActual: number;
+  mejorRacha: number;
+  ultimaPartidaId?: string;
 }

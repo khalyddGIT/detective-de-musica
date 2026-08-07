@@ -3,13 +3,15 @@
 import React, { useEffect, useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { GameBoard } from '@/components/GameBoard';
+import { ModeSelector } from '@/components/ModeSelector';
 import { ResultModal } from '@/components/ResultModal';
 import { Leaderboard } from '@/components/Leaderboard';
 import { AuthModal } from '@/components/AuthModal';
 import { HelpModal } from '@/components/HelpModal';
-import { Pista } from '@/types/game';
+import { Pista, ModoJuego, StreakInfo } from '@/types/game';
+import { loadStreak, updateStreak } from '@/lib/game/daily';
 import { createClient } from '@/lib/supabase/client';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Flame } from 'lucide-react';
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
@@ -17,6 +19,9 @@ export default function Home() {
   const [pistas, setPistas] = useState<Pista[]>([]);
   const [totalPistas, setTotalPistas] = useState<number>(5);
   const [wrongGuesses, setWrongGuesses] = useState<string[]>([]);
+
+  const [currentMode, setCurrentMode] = useState<ModoJuego>('aleatorio');
+  const [streakInfo, setStreakInfo] = useState<StreakInfo>({ rachaActual: 0, mejorRacha: 0 });
   
   const [isLoadingGame, setIsLoadingGame] = useState<boolean>(true);
   const [isLoadingPista, setIsLoadingPista] = useState<boolean>(false);
@@ -40,8 +45,10 @@ export default function Home() {
 
   const supabase = createClient();
 
-  // Escuchar sesión de Supabase Auth
+  // Cargar racha local e inicio de auth
   useEffect(() => {
+    setStreakInfo(loadStreak());
+
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user || null);
     });
@@ -56,14 +63,14 @@ export default function Home() {
   }, []);
 
   // Iniciar partida
-  const startNewGame = async () => {
+  const startNewGame = async (mode = currentMode) => {
     setIsLoadingGame(true);
     setGameResult(null);
     setPistas([]);
     setWrongGuesses([]);
 
     try {
-      const res = await fetch('/api/game/random');
+      const res = await fetch(`/api/game/random?mode=${mode}`);
       const data = await res.json();
 
       if (data.cancion_id && data.primera_pista) {
@@ -78,8 +85,13 @@ export default function Home() {
     }
   };
 
+  const handleSelectMode = (newMode: ModoJuego) => {
+    setCurrentMode(newMode);
+    startNewGame(newMode);
+  };
+
   useEffect(() => {
-    startNewGame();
+    startNewGame(currentMode);
   }, []);
 
   // Pedir más pista
@@ -129,16 +141,19 @@ export default function Home() {
       const data = await res.json();
 
       if (data.acerto || guess === '___RENDICION___') {
+        const isWin = Boolean(data.acerto);
+        const updatedStreak = updateStreak(isWin);
+        setStreakInfo(updatedStreak);
+
         if (data.cancion) {
           setGameResult({
             finished: true,
-            acerto: data.acerto,
+            acerto: isWin,
             puntaje: data.puntaje,
             cancion: data.cancion,
           });
         }
       } else {
-        // Respuesta errónea: agregar al historial de intentos fallidos
         setWrongGuesses((prev) => [...prev, guess]);
       }
     } catch (error) {
@@ -168,13 +183,13 @@ export default function Home() {
         onOpenAuth={() => setShowAuth(true)}
         onOpenLeaderboard={() => setShowLeaderboard(true)}
         onOpenHelp={() => setShowHelp(true)}
-        onNewGame={startNewGame}
+        onNewGame={() => startNewGame(currentMode)}
         onLogout={handleLogout}
       />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-10 pb-16 relative z-10">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-8 pb-16 relative z-10">
         {/* Banner Hero Minimalista */}
-        <div className="text-center space-y-3 mb-10">
+        <div className="text-center space-y-3 mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] uppercase font-mono tracking-[0.2em] font-bold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>DESAFÍO DETECTIVE MUSICAL</span>
@@ -186,6 +201,12 @@ export default function Home() {
             Analiza las pistas progresivas de difícil a fácil y adivina el título exacto con la menor cantidad de intentos posible.
           </p>
         </div>
+
+        {/* Selector de Modo de Juego */}
+        <ModeSelector
+          currentMode={currentMode}
+          onSelectMode={handleSelectMode}
+        />
 
         {/* Game State */}
         {isLoadingGame ? (
@@ -209,6 +230,7 @@ export default function Home() {
             isLoadingPista={isLoadingPista}
             isSubmittingGuess={isSubmittingGuess}
             wrongGuesses={wrongGuesses}
+            streakInfo={streakInfo}
           />
         )}
       </main>
@@ -225,7 +247,7 @@ export default function Home() {
           puntaje={gameResult.puntaje}
           pistasUsadas={pistas.length}
           cancion={gameResult.cancion}
-          onPlayAgain={startNewGame}
+          onPlayAgain={() => startNewGame(currentMode)}
           onOpenLeaderboard={() => {
             setGameResult(null);
             setShowLeaderboard(true);

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
           { orden: 2, tipo: 'genero', titulo: 'Pista 2: Género y Estilo', contenido: 'Synthwave, Synth-pop con influencias de los 80s.' },
           { orden: 3, tipo: 'colaboradores', titulo: 'Pista 3: Álbum y Producción', contenido: 'Producida por Max Martin. Álbum: After Hours.' },
           { orden: 4, tipo: 'letra', titulo: 'Pista 4: Fragmento de letra', contenido: 'I said, ooh, I\'m blinded by the lights...' },
-          { orden: 5, tipo: 'audio', titulo: 'Pista 5: Preview de Audio', contenido: 'https://cdns-preview-e.dzcdn.net/stream/c-e771113e00d2b14502b66236b2b73b22-4.mp3' }
+          { orden: 5, tipo: 'audio', titulo: 'Pista 5: Preview de Audio', contenido: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioVideo115/v4/a4/bc/7c/a4bc7c3e-862a-89a3-5c8e-3243f7cbef10/mzaf_15783350172551460309.plus.aac.p.m4a' }
         ];
       } else {
         songPistas = [
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
           { orden: 2, tipo: 'genero', titulo: 'Pista 2: Género y Estilo', contenido: 'Rock progresivo, Ópera rock sin estribillo tradicional.' },
           { orden: 3, tipo: 'colaboradores', titulo: 'Pista 3: Álbum y Artista', contenido: 'Escrita por Freddie Mercury para Queen. Álbum: A Night at the Opera.' },
           { orden: 4, tipo: 'letra', titulo: 'Pista 4: Fragmento de letra', contenido: 'Is this the real life? Is this just fantasy?...' },
-          { orden: 5, tipo: 'audio', titulo: 'Pista 5: Preview de Audio', contenido: 'https://cdns-preview-8.dzcdn.net/stream/c-88ab8872b226e64c23f77ea63098e986-5.mp3' }
+          { orden: 5, tipo: 'audio', titulo: 'Pista 5: Preview de Audio', contenido: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioVideo116/v4/b8/b6/25/b8b625c2-c0cb-22e7-9d7e-7c5f87b8d4f4/mzaf_16259021235129668478.plus.aac.p.m4a' }
         ];
       }
     } else {
