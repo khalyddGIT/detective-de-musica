@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ModoJuego } from '@/types/game';
-import { Dices, Calendar, Disc, Radio } from 'lucide-react';
+import { Dices, Calendar, Disc, Radio, ArrowUpRight } from 'lucide-react';
 
 interface ModeSelectorProps {
   currentMode: ModoJuego;
@@ -14,45 +14,58 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   onSelectMode,
 }) => {
   const modes: Array<{ id: ModoJuego; label: string; icon: React.ReactNode; desc: string }> = [
-    { id: 'aleatorio', label: 'Aleatorio', icon: <Dices className="w-4 h-4 text-emerald-400" />, desc: 'Canciones variadas al azar' },
-    { id: 'diario', label: 'Desafío Diario', icon: <Calendar className="w-4 h-4 text-amber-400" />, desc: 'La canción del día' },
-    { id: 'clasicos', label: 'Clásicos 70s-90s', icon: <Disc className="w-4 h-4 text-purple-400" />, desc: 'Rock y Pop de época' },
-    { id: 'modernos', label: 'Éxitos 2010+', icon: <Radio className="w-4 h-4 text-sky-400" />, desc: 'Hits contemporáneos' },
+    { id: 'aleatorio', label: 'Aleatorio', icon: <Dices className="w-4 h-4" />, desc: 'Canciones variadas al azar' },
+    { id: 'diario', label: 'Desafío Diario', icon: <Calendar className="w-4 h-4" />, desc: 'La canción del día' },
+    { id: 'clasicos', label: 'Clásicos 70s-90s', icon: <Disc className="w-4 h-4" />, desc: 'Rock y Pop de época' },
+    { id: 'modernos', label: 'Éxitos 2010+', icon: <Radio className="w-4 h-4" />, desc: 'Hits contemporáneos' },
   ];
 
   return (
-    <div className="w-full max-w-3xl mx-auto mb-6">
-      <div className="bezel-outer">
-        <div className="bezel-inner p-2.5 sm:p-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {modes.map((mode) => {
-            const isActive = currentMode === mode.id;
-            return (
-              <button
-                key={mode.id}
-                onClick={() => onSelectMode(mode.id)}
-                className={`p-3 rounded-2xl transition-all text-left flex flex-col justify-between ${
-                  isActive
-                    ? 'bg-slate-900 border border-emerald-500/50 shadow-lg shadow-emerald-500/10'
-                    : 'bg-slate-950/40 border border-slate-800/80 hover:bg-slate-900/50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="p-1.5 rounded-xl bg-slate-950 border border-slate-800">
-                    {mode.icon}
+    <div className="w-full max-w-3xl mx-auto mb-8">
+      <div className="pop-card p-3 grid grid-cols-2 sm:grid-cols-4 gap-2.5 shadow-lg">
+        {modes.map((mode) => {
+          const isActive = currentMode === mode.id;
+          return (
+            <button
+              key={mode.id}
+              onClick={() => onSelectMode(mode.id)}
+              className={`p-3.5 rounded-2xl transition-all text-left flex flex-col justify-between group active:scale-95 ${
+                isActive
+                  ? 'bg-[#0b0b0e] text-white shadow-xl border-2 border-black'
+                  : 'bg-white/70 text-[#0b0b0e] border border-black/10 hover:bg-white'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold transition-colors ${
+                    isActive
+                      ? 'bg-[#facc15] text-[#0b0b0e]'
+                      : 'bg-[#0b0b0e]/10 text-[#0b0b0e] group-hover:bg-[#0b0b0e] group-hover:text-white'
+                  }`}
+                >
+                  {mode.icon}
+                </div>
+                {isActive ? (
+                  <div className="w-5 h-5 rounded-full badge-yellow flex items-center justify-center font-black text-[10px]">
+                    <ArrowUpRight className="w-3 h-3 stroke-[3]" />
                   </div>
-                  {isActive && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-xs text-slate-100">{mode.label}</h3>
-                  <p className="text-[10px] text-slate-400 font-medium truncate mt-0.5">{mode.desc}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-black/20 group-hover:bg-black/40 transition-colors" />
+                )}
+              </div>
+              <div>
+                <h3 className={`font-extrabold text-xs sm:text-sm leading-tight ${isActive ? 'text-white' : 'text-[#0b0b0e]'}`}>
+                  {mode.label}
+                </h3>
+                <p className={`text-[10.5px] font-medium truncate mt-0.5 ${isActive ? 'text-white/70' : 'text-[#0b0b0e]/60'}`}>
+                  {mode.desc}
+                </p>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 };
+

@@ -11,7 +11,7 @@ import { HelpModal } from '@/components/HelpModal';
 import { Pista, ModoJuego, StreakInfo } from '@/types/game';
 import { loadStreak, updateStreak } from '@/lib/game/daily';
 import { createClient } from '@/lib/supabase/client';
-import { Sparkles, Flame } from 'lucide-react';
+import { Sparkles, ArrowUpRight } from 'lucide-react';
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
@@ -45,7 +45,6 @@ export default function Home() {
 
   const supabase = createClient();
 
-  // Cargar racha local e inicio de auth
   useEffect(() => {
     setStreakInfo(loadStreak());
 
@@ -62,7 +61,6 @@ export default function Home() {
     };
   }, []);
 
-  // Iniciar partida
   const startNewGame = async (mode = currentMode) => {
     setIsLoadingGame(true);
     setGameResult(null);
@@ -94,7 +92,6 @@ export default function Home() {
     startNewGame(currentMode);
   }, []);
 
-  // Pedir más pista
   const handlePedirPista = async () => {
     if (pistas.length >= totalPistas || isLoadingPista) return;
 
@@ -121,7 +118,6 @@ export default function Home() {
     }
   };
 
-  // Enviar adivinanza
   const handleEnviarRespuesta = async (guess: string) => {
     if (isSubmittingGuess) return;
 
@@ -163,7 +159,6 @@ export default function Home() {
     }
   };
 
-  // Rendirse
   const handleRendirse = async () => {
     await handleEnviarRespuesta('___RENDICION___');
   };
@@ -174,9 +169,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#05070f] text-slate-100 relative selection:bg-emerald-400 selection:text-slate-950">
-      {/* Mesh Glow Overlay */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-emerald-500/5 blur-[120px] pointer-events-none rounded-full" />
+    <div className="min-h-screen flex flex-col bg-[#a393ff] text-[#0e0e12] relative selection:bg-[#facc15] selection:text-[#0e0e12]">
+      {/* Background Watermark */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none flex items-center justify-center">
+        <span className="text-[25vw] font-black tracking-tighter text-[#0e0e12]/[0.05] uppercase leading-none">
+          MUSIC
+        </span>
+      </div>
 
       <Navbar
         user={user}
@@ -187,18 +186,21 @@ export default function Home() {
         onLogout={handleLogout}
       />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-8 pb-16 relative z-10">
-        {/* Banner Hero Minimalista */}
-        <div className="text-center space-y-3 mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] uppercase font-mono tracking-[0.2em] font-bold">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 pt-6 pb-16 relative z-10 space-y-6">
+        {/* Banner Hero */}
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full badge-yellow text-[11px] font-mono uppercase tracking-wider font-bold shadow-sm">
             <Sparkles className="w-3.5 h-3.5" />
             <span>DESAFÍO DETECTIVE MUSICAL</span>
+            <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-100">
+
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0e0e12] leading-tight">
             ¿Reconoces esta canción?
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
-            Analiza las pistas progresivas de difícil a fácil y adivina el título exacto con la menor cantidad de intentos posible.
+
+          <p className="text-xs sm:text-sm font-medium text-[#0e0e12]/70 max-w-md mx-auto leading-relaxed">
+            Analiza las pistas de difícil a fácil y adivina el título exacto con la menor cantidad de intentos posible.
           </p>
         </div>
 
@@ -210,13 +212,10 @@ export default function Home() {
 
         {/* Game State */}
         {isLoadingGame ? (
-          <div className="py-24 text-center space-y-4">
-            <div className="relative w-12 h-12 mx-auto">
-              <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20" />
-              <div className="absolute inset-0 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
-            </div>
-            <p className="text-xs text-slate-400 font-mono tracking-wide">
-              Seleccionando canción secreta y generando pistas...
+          <div className="py-20 text-center space-y-4">
+            <div className="w-12 h-12 mx-auto rounded-full border-4 border-black/10 border-t-[#0e0e12] animate-spin" />
+            <p className="text-xs font-mono font-bold text-[#0e0e12]/70 tracking-wide uppercase">
+              Cargando canción y generando pistas...
             </p>
           </div>
         ) : (
@@ -235,9 +234,9 @@ export default function Home() {
         )}
       </main>
 
-      {/* Footer Minimalista */}
-      <footer className="border-t border-slate-900 py-8 text-center text-[11px] text-slate-500 relative z-10 font-mono">
-        <p>Detective de Música &copy; {new Date().getFullYear()} — Powered by Next.js 14, Supabase & Last.fm API</p>
+      {/* Footer */}
+      <footer className="border-t border-black/10 py-6 text-center text-xs text-[#0e0e12]/60 relative z-10 font-mono font-bold">
+        <p>Detective de Música &copy; {new Date().getFullYear()} — Song Clue Game</p>
       </footer>
 
       {/* Modales */}
@@ -269,3 +268,5 @@ export default function Home() {
     </div>
   );
 }
+
+

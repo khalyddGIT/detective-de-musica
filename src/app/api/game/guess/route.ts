@@ -4,6 +4,10 @@ import { isCorrectGuess, calculateScore } from '@/lib/game/matching';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET() {
+  return NextResponse.json({ status: 'ok' });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

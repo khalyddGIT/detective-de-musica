@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Play, Pause, Volume2, Music, AlertCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Play, Pause, Volume2, Music, ExternalLink, AlertCircle } from 'lucide-react';
 
 interface AudioPlayerProps {
   url: string;
@@ -12,19 +12,30 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ url }) => {
   const [audioError, setAudioError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const togglePlay = () => {
+  useEffect(() => {
+    setIsPlaying(false);
+    setAudioError(false);
+  }, [url]);
+
+  const togglePlay = async () => {
     if (!audioRef.current || audioError) return;
+
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().then(() => {
+      try {
+        // Asegurar que el audio esté cargado
+        if (audioRef.current.readyState === 0) {
+          audioRef.current.load();
+        }
+        await audioRef.current.play();
         setIsPlaying(true);
-      }).catch((err) => {
-        console.warn('Audio play prevented or failed:', err);
+      } catch (err) {
+        console.warn('[AudioPlayer] Error al reproducir:', err);
         setIsPlaying(false);
         setAudioError(true);
-      });
+      }
     }
   };
 
@@ -33,15 +44,16 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ url }) => {
   };
 
   const handleError = () => {
+    console.warn('[AudioPlayer] Error en la fuente de audio:', url);
     setIsPlaying(false);
     setAudioError(true);
   };
 
-  if (!url || url.includes('no disponible') || audioError) {
+  if (!url || url.includes('no disponible')) {
     return (
       <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-center text-xs text-slate-400 font-medium flex items-center justify-center gap-2">
-        <AlertCircle className="w-4 h-4 text-amber-400" />
-        <span>Muestra de audio no disponible en este dispositivo. ¡Intenta adivinar con las demás pistas!</span>
+        <Music className="w-4 h-4 text-slate-500" />
+        <span>Muestra de audio no disponible para esta canción.</span>
       </div>
     );
   }
@@ -50,11 +62,16 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ url }) => {
     <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-emerald-500/25 shadow-xl shadow-emerald-500/5">
       <audio
         ref={audioRef}
-        src={url}
         onEnded={handleEnded}
         onError={handleError}
-        preload="metadata"
-      />
+        preload="auto"
+        crossOrigin="anonymous"
+      >
+        <source src={url} type="audio/mp4" />
+        <source src={url} type="audio/aac" />
+        <source src={url} type="audio/mpeg" />
+      </audio>
+
       <div className="flex items-center gap-4">
         <button
           onClick={togglePlay}
@@ -74,7 +91,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ url }) => {
               Muestra de Audio (30 Segundos)
             </span>
             <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
-              {isPlaying ? 'Reproduciendo' : 'Pausa / Listo'}
+              {audioError ? 'Error de carga' : isPlaying ? 'Reproduciendo' : 'Listo'}
             </span>
           </div>
 
@@ -92,6 +109,21 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ url }) => {
               />
             ))}
           </div>
+
+          {/* Enlace alternativo directo si el navegador bloquea el reproductor */}
+          {audioError && (
+            <div className="mt-2 text-right">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-mono text-amber-400 hover:underline"
+              >
+                <span>Escuchar muestra directamente</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

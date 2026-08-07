@@ -3,6 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET() {
+  return NextResponse.json({ status: 'ok' });
+}
+
 const DEMO_DISTRACTORS: Record<string, string[]> = {
   'demo-1': ['Blinding Lights', 'Save Your Tears', 'Starboy', 'The Hills'],
   'demo-2': ['Bohemian Rhapsody', 'Don\'t Stop Me Now', 'We Will Rock You', 'Another One Bites the Dust']

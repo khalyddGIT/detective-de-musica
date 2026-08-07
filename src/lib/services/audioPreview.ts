@@ -7,7 +7,25 @@ export interface AudioPreviewData {
 
 export async function fetchAudioPreview(artist: string, track: string): Promise<AudioPreviewData> {
   try {
-    // 1. Intentar con iTunes Search API (gratuita, rápida, sin API Key)
+    // 1. Intentar con Deezer API (.mp3 estándar altamente compatible)
+    const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(`artist:"${artist}" track:"${track}"`)}`;
+    const deezerRes = await fetch(deezerUrl);
+    if (deezerRes.ok) {
+      const data = await deezerRes.json();
+      if (data.data && data.data.length > 0) {
+        const item = data.data[0];
+        if (item.preview) {
+          return {
+            previewUrl: item.preview,
+            releaseYear: null,
+            albumName: item.album?.title || null,
+            genreName: null,
+          };
+        }
+      }
+    }
+
+    // 2. Intentar con iTunes Search API (formato AAC / M4A)
     const query = `${artist} ${track}`;
     const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=3`;
     
@@ -23,22 +41,6 @@ export async function fetchAudioPreview(artist: string, track: string): Promise<
           releaseYear: releaseYear && !isNaN(releaseYear) ? releaseYear : null,
           albumName: item.collectionName || null,
           genreName: item.primaryGenreName || null,
-        };
-      }
-    }
-
-    // 2. Intentar como fallback con Deezer API
-    const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(`artist:"${artist}" track:"${track}"`)}`;
-    const deezerRes = await fetch(deezerUrl);
-    if (deezerRes.ok) {
-      const data = await deezerRes.json();
-      if (data.data && data.data.length > 0) {
-        const item = data.data[0];
-        return {
-          previewUrl: item.preview || null,
-          releaseYear: null,
-          albumName: item.album?.title || null,
-          genreName: null,
         };
       }
     }

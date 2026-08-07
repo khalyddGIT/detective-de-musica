@@ -4,6 +4,10 @@ import { Pista } from '@/types/game';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET() {
+  return NextResponse.json({ status: 'ok' });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { cancion_id, orden } = await req.json();
